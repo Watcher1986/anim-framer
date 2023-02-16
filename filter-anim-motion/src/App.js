@@ -1,24 +1,41 @@
-import { useEffect, useState } from "react";
-import "./App.css";
+import { useEffect, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-import { api_key } from "./api/db-meta";
+import "./App.css";
+import MovieCard from "./components/MovieCard";
+import Filter from "./components/Filter";
+
+import { fetchPopular } from "./api/functions/getMovies";
 
 function App() {
-  const [dataArr, setDataArr] = useState([]);
-  const fetchPopular = async () => {
-    const response = await fetch(
-      `https://api.themoviedb.org/3/movie/popular?api_key=${api_key}&language=en-US&page=1`
-    );
-    const movies = await response.json();
-    setDataArr(movies.results);
-  };
+  const [movies, setMovies] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [activeGenre, setActiveGenre] = useState(0);
+
+  const getMovies = useCallback(
+    () => fetchPopular(setMovies, setFiltered),
+    [setMovies, setFiltered]
+  );
+
   useEffect(() => {
-    fetchPopular();
+    getMovies();
   }, []);
 
   return (
     <div className="App">
-      <h1>Hey there</h1>
+      <Filter
+        movies={movies}
+        setFiltered={setFiltered}
+        activeGenre={activeGenre}
+        setActiveGenre={setActiveGenre}
+      />
+      <motion.div layout className="movies-container">
+        <AnimatePresence>
+          {filtered.map((movie) => (
+            <MovieCard key={movie?.id} movie={movie} />
+          ))}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }
